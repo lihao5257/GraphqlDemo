@@ -1,19 +1,36 @@
 # This is a ❤
-type Book {
-  title: String!
-  isbn: String!
+scalar LocalDate
+
+type Book{
+    title: String!
+    isbn: String!
+    publishedDate: LocalDate
+    authors: [Author]
 }
 
-type Query {
-  getBook(isbn: String!): Book 
-  getAllBooks : [Book]
+type Author{
+    id: Int!
+    name: String!
+    books: [Book]
 }
 
-type Mutation {
-    createBook(book:BookWrapper):Book
+type Query{
+    books(first: Int, after: String): BookConnection @connection(for: "Book")
+    getBook(isbn: String!): Book
+}
+
+type Mutation{
+    createBook(book: BookWrapper): Book
+    createAuthor(author: AuthorWrapper): Author
+    addAuthor(authorId: Int, isbn: String): Book
+}
+
+input AuthorWrapper{
+    name: String!
 }
 
 input BookWrapper{
-    title:String!
-    isbn:String!
+    title: String!
+    isbn: String!
+    publishedDate: LocalDate
 }

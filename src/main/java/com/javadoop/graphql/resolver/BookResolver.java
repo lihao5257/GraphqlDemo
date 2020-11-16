@@ -1,34 +1,40 @@
 package com.javadoop.graphql.resolver;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
+import graphql.kickstart.tools.GraphQLQueryResolver;
+import graphql.relay.Connection;
+import graphql.relay.SimpleListConnection;
+import graphql.schema.DataFetchingEnvironment;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.javadoop.graphql.exception.ResourceNotFoundException;
 import com.javadoop.graphql.model.Book;
-import graphql.kickstart.tools.GraphQLQueryResolver;
+import com.javadoop.graphql.repository.BookRepository;
+
+import java.util.List;
+import java.util.Optional;
 
 @Component
 public class BookResolver implements GraphQLQueryResolver {
 
-    static List<Book> books  = null;
-    static {
-        books   =new ArrayList<Book>();
-        books.add(new Book("Harry Porter 1", "1111"));
-        books.add(new Book("Harry Porter 2", "2234"));
-        books.add(new Book("Harry Porter 3", "2434324"));
-        books.add(new Book("Harry Porter 4", "112343211"));
-        books.add(new Book("Harry Porter 5", "5646"));
+    private final BookRepository bookRepository;
+
+    @Autowired
+    public BookResolver(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
     }
 
+    public Connection<Book> books(int first, String after, DataFetchingEnvironment env) {
+        List<Book> books = bookRepository.findAll();
+        return new SimpleListConnection<>(books).get(env);
+    }
 
     public Book getBook(String isbn) {
-        return new Book("Learn GraphQL", "309234324");
+        Optional<Book> bookContainer =  bookRepository.findById(isbn);
+        if (bookContainer.isPresent()) {
+            return bookContainer.get();
+        }
+        throw new ResourceNotFoundException("There is no book with : " + isbn);
     }
-    
-    public List<Book> getAllBooks() {
-        return books;
-    }
+
 }
